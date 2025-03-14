@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/yourusername/ci-cd-project.git'
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker build -t my-dockerhub-user/frontend:latest ./frontend'
+                sh 'docker build -t my-dockerhub-user/backend:latest ./backend'
+            }
+        }
+        stage('Push Docker Images') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
+                    sh 'docker push my-dockerhub-user/frontend:latest'
+                    sh 'docker push my-dockerhub-user/backend:latest'
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s/'
+            }
+        }
+    }
+}
